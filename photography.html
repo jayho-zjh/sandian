@@ -1,0 +1,45 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>摄影 · 散点</title><link rel="stylesheet" href="numbers.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:#222824;font:16px JournalDigits,Georgia,"Songti SC",SimSun,serif}main,header{max-width:1340px;margin:auto;padding:0 5vw}header{display:flex;align-items:baseline;gap:1rem;padding-top:24px;padding-bottom:20px;border-bottom:1px solid #d2d4cb}a,button,select{color:inherit;font:inherit}a{text-decoration:none}a:hover{text-decoration:underline}header strong{font-size:32px}header small{margin-left:auto}nav{display:flex;gap:24px;padding:24px 0}nav [aria-current=page]{border-bottom:2px solid;padding-bottom:5px}h1{font-size:clamp(36px,5vw,70px);margin:20px 0 10px}h2{margin:30px 0 14px}.bar{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}figure{margin:0}.grid img,.thumbs img{width:100%;display:block;object-fit:cover;border-radius:4px}.grid img{aspect-ratio:2/1}.gear img{aspect-ratio:1.7}.grid h3{font-size:24px;margin:12px 0 4px}p,small{color:#61665f}.thumbs{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0}.thumbs button{background:none;border:none;text-align:left;padding:0;cursor:pointer}.thumbs img{width:auto;height:clamp(140px,16vw,235px);max-width:100%;object-fit:contain}.thumbs span{display:block;margin-top:8px}button,select{cursor:pointer}dialog{border:none;background:#111716;color:white;width:96vw;max-width:1250px;padding:16px}dialog::backdrop{background:#0a0e0ef2}dialog img{width:100%;height:64vh;object-fit:contain;touch-action:pan-y}dialog button{border:1px solid #78817c;border-radius:4px;background:transparent;color:#fff;padding:7px 14px}dialog p{color:#d4d6d1}footer{padding:32px 0;font-size:14px;color:#686d67}@media(max-width:650px){.grid{grid-template-columns:1fr}.thumbs{display:grid;grid-template-columns:1fr 1fr}.thumbs img{width:100%;height:auto}.bar{flex-wrap:wrap}dialog img{height:54vh}header{gap:8px}header i{font-size:13px}}
+</style><header><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><small><a href="index.html">返回首页</a></small></header><main><nav aria-label="摄影栏目"><a href="#albums">相册</a><a href="#gear">我的装备</a></nav><div id="content"></div><footer>Jayho 的摄影手记 · 初始相册与装备为示例</footer></main>
+<dialog id="viewer" aria-labelledby="photoTitle"><div class="bar"><strong id="photoTitle"></strong><button id="close">关闭 ×</button></div><img id="large" alt=""><div class="bar"><p id="info" aria-live="polite"></p><div><button id="previous" aria-label="上一张照片">←</button> <button id="next" aria-label="下一张照片">→</button></div></div></dialog>
+<script src="journal-data.js"></script><script src="site.js"></script><script>
+const albums=[...journal.albums].sort((a,b)=>b.date.localeCompare(a.date));
+const get=id=>document.getElementById(id);
+const content=get('content'),viewer=get('viewer');
+let theme='全部',photos=[],current=0,activeAlbum;
+function drawWall(){
+ const matching=albums.filter(a=>theme==='全部'||a.theme===theme);
+ const years=[...new Set(matching.map(a=>a.date.slice(0,4)))].sort().reverse();
+ content.innerHTML='<div class="bar"><h1>摄影相册</h1><label>主题 <select id="filter">'+['全部',...new Set(albums.map(a=>a.theme))].map(t=>'<option'+(t===theme?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select></label></div>'+years.map(y=>'<h2>'+y+'</h2><div class="grid">'+matching.filter(a=>a.date.startsWith(y)).map(a=>'<a href="#album-'+esc(a.id)+'"><img src="'+esc(a.cover)+'.jpg" alt="'+esc(a.name)+'"><h3>'+esc(a.name)+'</h3><small>'+esc(a.date)+'　／　'+esc(a.theme)+'　／　'+a.photos.length+' 张</small></a>').join('')+'</div>').join('');
+ get('filter').onchange=e=>{theme=e.target.value;drawWall();get('filter').focus()};
+}
+function drawAlbum(album){
+ activeAlbum=album;
+ photos=[...album.photos].sort((a,b)=>(a.pin??Infinity)-(b.pin??Infinity)||(a.captured||a.time).localeCompare(b.captured||b.time));
+ content.innerHTML='<a href="#albums">← 所有相册</a><h1>'+esc(album.name)+'</h1><p>'+esc(album.date)+'　／　'+esc(album.theme)+'　／　'+photos.length+' 张</p><div class="thumbs">'+photos.map((p,i)=>'<button data-photo="'+i+'"><img src="'+esc(p.file)+'.jpg" alt="'+esc(p.title)+'"><span>'+(p.pin?'置顶 · ':'')+p.title+'</span></button>').join('')+'</div>';
+ content.querySelectorAll('[data-photo]').forEach(b=>b.onclick=()=>{current=Number(b.dataset.photo);showPhoto();viewer.showModal()});
+}
+function showPhoto(){
+ const p=photos[current]; get('large').src=p.file+'.jpg';get('large').alt=p.title;
+ get('photoTitle').textContent=p.title+'　'+(current+1)+' / '+photos.length;
+ get('info').textContent=[p.captured||[activeAlbum.date,p.time].join(' '),p.camera??(p.imported?'':'Sony α7 IV'),p.lens??(p.imported?'':'FE 24–70 mm'),p.settings,p.imported?'':'示例'].filter(Boolean).join(' ｜ ');
+}
+function move(step){current=(current+step+photos.length)%photos.length;showPhoto()}
+get('close').onclick=()=>viewer.close();
+get('previous').onclick=()=>move(-1);get('next').onclick=()=>move(1);
+viewer.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}};
+let touchX;
+get('large').ontouchstart=e=>{touchX=e.changedTouches[0].clientX};
+get('large').ontouchend=e=>{const dx=e.changedTouches[0].clientX-touchX;if(Math.abs(dx)>50)move(dx<0?1:-1)};
+function render(){
+ if(viewer.open)viewer.close();
+ const gear=location.hash==='#gear';
+ document.querySelectorAll('nav a').forEach(a=>a.setAttribute('aria-current',(gear?a.hash==='#gear':a.hash==='#albums')?'page':'false'));
+ const album=albums.find(a=>location.hash==='#album-'+a.id);
+ if(album)drawAlbum(album);
+ else if(gear)content.innerHTML='<h1>我的装备</h1><div class="grid gear">'+journal.gear.map(x=>'<figure><img src="'+esc(x.photo)+'.jpg" alt="'+esc(x.name)+'"><h3>'+esc(x.name)+'</h3><p>'+esc(x.note)+'</p></figure>').join('')+'</div>';
+ else drawWall();
+}
+addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});render();
+</script></html>

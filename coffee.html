@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>咖啡 · 散点</title><link rel="stylesheet" href="numbers.css"><link rel="stylesheet" href="journal.css">
+<body class="shell"><header class="brand"><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><a href="index.html">返回首页</a></header><main><h1>咖啡手记</h1><nav class="tabs" id="tabs"></nav><section id="cards"></section></main><footer>Jayho 的咖啡图鉴 · 初始内容为示例</footer>
+<script src="journal-data.js"></script><script src="site.js"></script><script>
+const titles={drinks:'咖啡图鉴',beans:'咖啡豆',tools:'器具'};
+function draw(){
+ const [section,id]=location.hash.slice(1).split('/');
+ const key=Object.hasOwn(titles,section)?section:'drinks';
+ const items=[...journal[key]];
+ if(key==='drinks')items.sort((a,b)=>b.date.localeCompare(a.date));
+ const item=items.find(x=>x.id===id);
+ tabs.innerHTML=Object.entries(titles).map(([k,title])=>'<a href="#'+k+'" aria-current="'+(key===k?'page':'false')+'">'+title+' · '+journal[k].length+'</a>').join('');
+ function references(group){return (item[group]||[]).map(ref=>journal[group].find(x=>x.id===ref)).filter(Boolean).map(x=>'<a href="#'+group+'/'+esc(x.id)+'">'+esc(x.name)+'</a>').join('')}
+ if(item){
+ cards.innerHTML='<a href="#'+key+'">← '+titles[key]+'</a><article class="detail"><img src="'+esc(item.photo)+'.jpg" alt="'+esc(item.name)+'"><div><h2>'+esc(item.name)+'</h2><p>'+esc(item.note)+'</p>'+(key==='drinks'?'<p class="links">咖啡豆　'+references('beans')+'</p><p class="links">器具　'+references('tools')+'</p>':'')+'</div></article>';
+ }else cards.innerHTML='<div class="tiles">'+items.map(x=>'<a class="tile" href="#'+key+'/'+esc(x.id)+'"><img src="'+esc(x.photo)+'.jpg" alt="'+esc(x.name)+'"><h2>'+esc(x.name)+'</h2><p>'+esc(x.note)+'</p></a>').join('')+'</div>';
+}
+addEventListener('hashchange',draw);draw();
+</script></html>
