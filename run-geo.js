@@ -58,7 +58,7 @@ async function amapTrack(host,raw){
  cancelAnimationFrame(frame);
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){line.setPath(path);return}
  const start=performance.now();
- function step(now){const t=Math.min(1,(now-start)/1800);line.setPath(path.slice(0,Math.max(2,Math.ceil(path.length*t))));if(t<1)frame=requestAnimationFrame(step)}
+ function step(now){const t=Math.min(1,(now-start)/6000);line.setPath(path.slice(0,Math.max(2,Math.ceil(path.length*t))));if(t<1)frame=requestAnimationFrame(step)}
  frame=requestAnimationFrame(step);
  }
  return {replay,destroy(){cancelAnimationFrame(frame);map.destroy()}};

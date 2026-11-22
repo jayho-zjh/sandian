@@ -70,7 +70,7 @@ function replay(){
  if(smallAmap){smallAmap.replay();return}
  const route=getRunEl('route');route.getAnimations().forEach(a=>a.cancel());
  if(!route.getAttribute('d')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- const length=route.getTotalLength();route.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length},{strokeDasharray:length+' '+length,strokeDashoffset:0}],{duration:1800,easing:'ease-in-out'});
+ const length=route.getTotalLength();route.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length},{strokeDasharray:length+' '+length,strokeDashoffset:0}],{duration:6000,easing:'ease-in-out'});
 }
 function renderRuns(){
  const month=monthSelect.value;
