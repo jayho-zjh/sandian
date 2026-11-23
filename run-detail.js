@@ -3,10 +3,10 @@ const params=new URLSearchParams(location.search);
 const archive=window.runningArchive?.runs||[];
 const run=archive.find(r=>r.id===params.get('id'));
 const specs={
- pace:{name:'配速',unit:'/km',color:'#99c77f'},
- hr:{name:'心率',unit:'次/分',color:'#e4908e'},
- cadence:{name:'步频',unit:'步/分',color:'#dfb374'},
- altitude:{name:'海拔',unit:'m',color:'#88b9ce'}
+ pace:{name:'配速',unit:'/km',color:'#9a722f'},
+ hr:{name:'心率',unit:'次/分',color:'#9a722f'},
+ cadence:{name:'步频',unit:'步/分',color:'#9a722f'},
+ altitude:{name:'海拔',unit:'m',color:'#9a722f'}
 };
 function clock(value){
  if(!Number.isFinite(value))return '—';
@@ -35,13 +35,13 @@ function chart(metrics){
   let grid='';
   for(let i=0;i<=4;i++){
    const value=lo+(hi-lo)*i/4,py=y(value);
-   grid+='<path d="M12 '+py+' H715" stroke="#455047" stroke-width="0.6"/><text x="725" y="'+(py+4)+'" fill="#bec8bc" font-size="12">'+valueText(key,value)+'</text>';
+   grid+='<path d="M12 '+py+' H715" stroke="#cbcfc4" stroke-width="0.6"/><text x="725" y="'+(py+4)+'" fill="#61665f" font-size="12">'+valueText(key,value)+'</text>';
   }
   const shapes=groups.map(g=>{
    const line='M'+g.map(([px,py])=>px.toFixed(2)+' '+py.toFixed(2)).join(' L');
    return '<path d="'+line+' V224 H'+g[0][0]+' Z" fill="url(#area)"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="1.6"/>';
   }).join('');
-  plot.innerHTML='<defs><linearGradient id="area" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="'+color+'" stop-opacity=".45"/><stop offset="1" stop-color="'+color+'" stop-opacity=".04"/></linearGradient></defs>'+grid+shapes+'<line id="cursor" y1="10" y2="224" stroke="#e4d7b8" opacity=".75"/><circle id="dot" r="3.5" fill="#fff4d6"/>';
+  plot.innerHTML='<defs><linearGradient id="area" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="'+color+'" stop-opacity=".45"/><stop offset="1" stop-color="'+color+'" stop-opacity=".04"/></linearGradient></defs>'+grid+shapes+'<line id="cursor" y1="10" y2="224" stroke="#61665f" opacity=".75"/><circle id="dot" r="3.5" fill="#f4b657"/>';
   plot.setAttribute('aria-label',set.name+'随时间变化');
   byId('duration').textContent=clock(duration);
   byId('chartNote').textContent=set.sampled?'按运动开始后的时间绘制，每 10 秒汇总一次有效采样。':'按设备分段均值绘制，每个点对应一段的结束时间。';

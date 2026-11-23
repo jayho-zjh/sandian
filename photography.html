@@ -1,45 +1,188 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>摄影 · 散点</title><link rel="stylesheet" href="numbers.css">
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>摄影 · 散点</title>
+<link rel="stylesheet" href="numbers.css">
+<link rel="stylesheet" href="journal.css">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:#222824;font:16px JournalDigits,Georgia,"Songti SC",SimSun,serif}main,header{max-width:1340px;margin:auto;padding:0 5vw}header{display:flex;align-items:baseline;gap:1rem;padding-top:24px;padding-bottom:20px;border-bottom:1px solid #d2d4cb}a,button,select{color:inherit;font:inherit}a{text-decoration:none}a:hover{text-decoration:underline}header strong{font-size:32px}header small{margin-left:auto}nav{display:flex;gap:24px;padding:24px 0}nav [aria-current=page]{border-bottom:2px solid;padding-bottom:5px}h1{font-size:clamp(36px,5vw,70px);margin:20px 0 10px}h2{margin:30px 0 14px}.bar{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}figure{margin:0}.grid img,.thumbs img{width:100%;display:block;object-fit:cover;border-radius:4px}.grid img{aspect-ratio:2/1}.gear img{aspect-ratio:1.7}.grid h3{font-size:24px;margin:12px 0 4px}p,small{color:#61665f}.thumbs{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0}.thumbs button{background:none;border:none;text-align:left;padding:0;cursor:pointer}.thumbs img{width:auto;height:clamp(140px,16vw,235px);max-width:100%;object-fit:contain}.thumbs span{display:block;margin-top:8px}button,select{cursor:pointer}dialog{border:none;background:#111716;color:white;width:96vw;max-width:1250px;padding:16px}dialog::backdrop{background:#0a0e0ef2}dialog img{width:100%;height:64vh;object-fit:contain;touch-action:pan-y}dialog button{border:1px solid #78817c;border-radius:4px;background:transparent;color:#fff;padding:7px 14px}dialog p{color:#d4d6d1}footer{padding:32px 0;font-size:14px;color:#686d67}@media(max-width:650px){.grid{grid-template-columns:1fr}.thumbs{display:grid;grid-template-columns:1fr 1fr}.thumbs img{width:100%;height:auto}.bar{flex-wrap:wrap}dialog img{height:54vh}header{gap:8px}header i{font-size:13px}}
-</style><header><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><small><a href="index.html">返回首页</a></small></header><main><nav aria-label="摄影栏目"><a href="#albums">相册</a><a href="#gear">我的装备</a></nav><div id="content"></div><footer>Jayho 的摄影手记 · 初始相册与装备为示例</footer></main>
-<dialog id="viewer" aria-labelledby="photoTitle"><div class="bar"><strong id="photoTitle"></strong><button id="close">关闭 ×</button></div><img id="large" alt=""><div class="bar"><p id="info" aria-live="polite"></p><div><button id="previous" aria-label="上一张照片">←</button> <button id="next" aria-label="下一张照片">→</button></div></div></dialog>
+body[data-module="photography"] {
+  background: var(--night, #12181a);
+  color: var(--night-ink, #faf9f4);
+  --gallery-line: rgba(250,249,244,.15);
+  --gallery-note: #bac0bb;
+}
+.brand, .tabs { border-color: var(--gallery-line); }
+.module-header { position: relative; isolation: isolate; overflow: hidden; }
+.module-header .shell { position: relative; }
+#cover {
+  position: absolute; inset: 0 0 0 auto; z-index: -1;
+  width: min(64%, 920px); height: 100%; object-fit: cover;
+  mask-image: linear-gradient(90deg,transparent,#000 65%); opacity: .55;
+}
+.gallery-nav, .filters { display: flex; flex-wrap: wrap; align-items: baseline; }
+.gallery-nav { justify-content: space-between; gap: 8px 24px; border-bottom: 1px solid var(--gallery-line); }
+.gallery-nav .tabs { margin: 0; border: 0; }
+.filters { gap: 18px; font-size: 13px; }
+.filters[hidden] { display: none; }
+.filters button, .shot {
+  color: inherit; border: 0; border-radius: 0; background: none; padding: 0; font: inherit;
+}
+.gallery-nav .tabs a, .filters button { padding: 14px 0 12px; border-bottom: 2px solid transparent; }
+.gallery-nav [aria-current="page"], .filters button[aria-pressed="true"] { border-bottom-color: var(--gold); }
+.gallery-nav a:hover, .filters button:hover, .album-link:hover, .back:hover { color: var(--gold-deep); }
+.album, .equipment { margin: 48px 0; }
+.album h2, .equipment h2 { margin: 0 0 6px; font-size: clamp(24px,2.4vw,36px); line-height: 1.25; }
+.album-link, .back { text-decoration: none; }
+.album-link span { font: 16px system-ui; vertical-align: middle; }
+.meta, .back, .equipment p, .gallery-footer { color: var(--gallery-note); }
+.meta, .back, .caption, .equipment p { font-size: 13px; }
+.meta { margin: 0 0 24px; font-family: var(--font-num),sans-serif; font-variant-numeric: tabular-nums; }
+.back { display: inline-block; margin-bottom: 14px; }
+.masonry { columns: 3; column-gap: 24px; }
+.shot, .equipment figure { display: block; width: 100%; break-inside: avoid; margin: 0 0 24px; text-align: left; }
+.image-frame { display: block; position: relative; overflow: hidden; border: 1px solid rgba(250,249,244,.08); border-radius: 6px; background: #202628; }
+.image-frame img { display: block; width: 100%; height: auto; transition: transform .3s cubic-bezier(.22,.61,.36,1), opacity .3s cubic-bezier(.22,.61,.36,1); }
+.image-frame img.loading { opacity: 0; }
+.shot:is(:hover,:focus-visible) img { transform: scale(1.02); }
+.caption { display: block; margin: 8px 0 0; }
+.photo-exif, .counter, #info { font: 11px/1.55 var(--font-num-mono),monospace; font-variant-numeric: tabular-nums; }
+.photo-exif { position: absolute; inset: auto 0 0; padding: 22px 8px 6px; text-align: right; color: rgba(255,255,255,.8); background: linear-gradient(transparent,rgba(0,0,0,.68)); }
+.shot:is(:hover,:focus-visible) .photo-exif { color: white; }
+.equipment h3 { margin: 8px 0; font-size: 20px; }
+.equipment p { margin: 0; }
+.gallery-footer { border-top: 1px solid var(--gallery-line); padding-top: 18px; }
+body:has(#viewer[open]) { overflow: hidden; }
+#viewer { position: fixed; inset: 0; margin: 0; width: 100%; height: 100%; max-width: none; max-height: none; padding: clamp(14px,3vw,48px); border: 0; background: transparent; color: #faf9f4; }
+#viewer[open] { display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 14px; }
+#viewer::backdrop { background: rgba(10,10,10,.94); }
+.viewer-bar { display: flex; align-items: center; gap: 14px; }
+.viewer-bar strong { margin-right: auto; overflow-wrap: anywhere; }
+.viewer-bar button { background: transparent; border: 1px solid rgba(250,249,244,.32); border-radius: 6px; color: inherit; min-width: 44px; min-height: 44px; }
+.viewer-bar button:hover { border-color: var(--gold); }
+#large { width: 100%; height: 100%; min-height: 0; object-fit: contain; border-radius: 0; touch-action: pan-y; }
+#info { color: var(--gallery-note); margin: 0 auto 0 0; }
+@media(max-width:720px) {
+  .masonry { columns: 2; column-gap: 14px; }
+  .shot, .equipment figure { margin-bottom: 14px; }
+  .photo-exif { padding: 18px 5px 4px; line-height: 1.2; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .image-frame img { transition: none; }
+  .shot:is(:hover,:focus-visible) img { transform: none; }
+}
+</style>
+</head>
+<body data-module="photography">
+<header class="brand shell"><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><a href="index.html">返回首页</a></header>
+<main>
+<section class="module-header">
+  <img id="cover" alt="" hidden>
+  <div class="shell"><h1>摄影手记</h1><p><i>走到水边时，光刚好落在岸上。</i></p></div>
+</section>
+<div class="shell">
+  <div class="gallery-nav">
+    <nav class="tabs" aria-label="摄影栏目"><a href="#albums">相册</a><a href="#gear">我的装备</a></nav>
+    <div id="filters" class="filters" role="group" aria-label="按题材筛选"></div>
+  </div>
+  <div id="content"></div>
+  <footer class="gallery-footer">Jayho 的摄影手记 · 初始相册与装备为示例</footer>
+</div>
+</main>
+<dialog id="viewer" aria-labelledby="photoTitle">
+  <div class="viewer-bar"><strong id="photoTitle"></strong><span id="counter" class="counter" aria-live="polite"></span><button id="close" autofocus aria-label="关闭灯箱">×</button></div>
+  <img id="large" alt="">
+  <div class="viewer-bar"><p id="info" aria-live="polite"></p><button id="previous" aria-label="上一张照片">←</button><button id="next" aria-label="下一张照片">→</button></div>
+</dialog>
 <script src="journal-data.js"></script><script src="site.js"></script><script>
-const albums=[...journal.albums].sort((a,b)=>b.date.localeCompare(a.date));
-const get=id=>document.getElementById(id);
-const content=get('content'),viewer=get('viewer');
-let theme='全部',photos=[],current=0,activeAlbum;
-function drawWall(){
- const matching=albums.filter(a=>theme==='全部'||a.theme===theme);
- const years=[...new Set(matching.map(a=>a.date.slice(0,4)))].sort().reverse();
- content.innerHTML='<div class="bar"><h1>摄影相册</h1><label>主题 <select id="filter">'+['全部',...new Set(albums.map(a=>a.theme))].map(t=>'<option'+(t===theme?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select></label></div>'+years.map(y=>'<h2>'+y+'</h2><div class="grid">'+matching.filter(a=>a.date.startsWith(y)).map(a=>'<a href="#album-'+esc(a.id)+'"><img src="'+esc(a.cover)+'.jpg" alt="'+esc(a.name)+'"><h3>'+esc(a.name)+'</h3><small>'+esc(a.date)+'　／　'+esc(a.theme)+'　／　'+a.photos.length+' 张</small></a>').join('')+'</div>').join('');
- get('filter').onchange=e=>{theme=e.target.value;drawWall();get('filter').focus()};
+const albums = [...journal.albums].sort((a,b) => b.date.localeCompare(a.date));
+const get = id => document.getElementById(id);
+const content = get('content'), viewer = get('viewer'), filters = get('filters');
+const dimensions = {lake:[820,421], fish:[347,210], dawn:[512,512], boat:[512,512], bank:[512,512], trail:[512,512], camera:[512,512], lens:[512,512]};
+let theme = null, activeAlbum, photos = [], current = 0;
+
+function orderedPhotos(album) {
+  return [...album.photos].sort((a,b) => (a.pin ?? Infinity) - (b.pin ?? Infinity) ||
+    (a.captured || a.time || '').localeCompare(b.captured || b.time || ''));
 }
-function drawAlbum(album){
- activeAlbum=album;
- photos=[...album.photos].sort((a,b)=>(a.pin??Infinity)-(b.pin??Infinity)||(a.captured||a.time).localeCompare(b.captured||b.time));
- content.innerHTML='<a href="#albums">← 所有相册</a><h1>'+esc(album.name)+'</h1><p>'+esc(album.date)+'　／　'+esc(album.theme)+'　／　'+photos.length+' 张</p><div class="thumbs">'+photos.map((p,i)=>'<button data-photo="'+i+'"><img src="'+esc(p.file)+'.jpg" alt="'+esc(p.title)+'"><span>'+(p.pin?'置顶 · ':'')+p.title+'</span></button>').join('')+'</div>';
- content.querySelectorAll('[data-photo]').forEach(b=>b.onclick=()=>{current=Number(b.dataset.photo);showPhoto();viewer.showModal()});
+function imageMarkup(file, title) {
+  const size = Object.hasOwn(dimensions,file) ? dimensions[file] : null;
+  const attributes = size ? ' width="' + size[0] + '" height="' + size[1] + '"' : '';
+  return '<img class="loading" loading="lazy" decoding="async" src="' + esc(file) + '.jpg" alt="' + esc(title) + '"' + attributes + '>';
 }
-function showPhoto(){
- const p=photos[current]; get('large').src=p.file+'.jpg';get('large').alt=p.title;
- get('photoTitle').textContent=p.title+'　'+(current+1)+' / '+photos.length;
- get('info').textContent=[p.captured||[activeAlbum.date,p.time].join(' '),p.camera??(p.imported?'':'Sony α7 IV'),p.lens??(p.imported?'':'FE 24–70 mm'),p.settings,p.imported?'':'示例'].filter(Boolean).join(' ｜ ');
+content.addEventListener('load', e => { if(e.target.tagName === 'IMG') e.target.classList.remove('loading'); }, true);
+content.addEventListener('error', e => { if(e.target.tagName === 'IMG') e.target.classList.remove('loading'); }, true);
+
+function albumMarkup(album, detail) {
+  const items = orderedPhotos(album);
+  const name = esc(album.name);
+  const heading = detail ? name : '<a class="album-link" href="#album-' + esc(album.id) + '">' + name + ' <span aria-hidden="true">↗</span></a>';
+  const shots = items.map((p,i) => {
+    const settings = p.settings ? '<span class="photo-exif">' + esc(p.settings) + '</span>' : '';
+    return '<button class="shot" data-photo="' + i + '" data-album="' + esc(album.id) + '" aria-haspopup="dialog" aria-label="查看' + esc(p.title) + '"><span class="image-frame">' + imageMarkup(p.file,p.title) + settings + '</span><span class="caption">' + (p.pin ? '置顶 · ' : '') + esc(p.title) + '</span></button>';
+  }).join('');
+  return '<section class="album">' + (detail ? '<a class="back" href="#albums">← 所有相册</a>' : '') + '<h2>' + heading + '</h2><p class="meta">' + esc(album.date) + ' · ' + esc(album.theme) + ' · ' + items.length + ' 张</p><div class="masonry">' + shots + '</div></section>';
 }
-function move(step){current=(current+step+photos.length)%photos.length;showPhoto()}
-get('close').onclick=()=>viewer.close();
-get('previous').onclick=()=>move(-1);get('next').onclick=()=>move(1);
-viewer.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}};
+
+const themes = [null, ...new Set(albums.map(a => a.theme))];
+filters.innerHTML = themes.map((t,i) => '<button type="button" data-theme="' + i + '">' + esc(t ?? '全部') + '</button>').join('');
+filters.onclick = e => {
+  const button = e.target.closest('[data-theme]');
+  if(button) { theme = themes[Number(button.dataset.theme)]; render(); }
+};
+function render() {
+  if(viewer.open) viewer.close();
+  const gear = location.hash === '#gear';
+  const album = albums.find(a => location.hash === '#album-' + a.id);
+  document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', (gear ? a.hash === '#gear' : a.hash === '#albums') ? 'page' : 'false'));
+  filters.hidden = gear || Boolean(album);
+  filters.querySelectorAll('button').forEach((b,i) => b.setAttribute('aria-pressed', themes[i] === theme));
+  const matching = albums.filter(a => theme === null || a.theme === theme);
+  const coverFile = gear ? journal.gear[0]?.photo : (album || matching[0])?.cover;
+  const cover = get('cover');
+  cover.hidden = !coverFile;
+  if(coverFile) cover.src = coverFile + '.jpg';
+  if(album) content.innerHTML = albumMarkup(album,true);
+  else if(gear) {
+    content.innerHTML = '<section class="equipment"><h2>我的装备</h2><div class="masonry">' + journal.gear.map(x => '<figure><span class="image-frame">' + imageMarkup(x.photo,x.name) + '</span><figcaption><h3>' + esc(x.name) + '</h3><p>' + esc(x.note) + '</p></figcaption></figure>').join('') + '</div></section>';
+  } else content.innerHTML = matching.map(a => albumMarkup(a,false)).join('') || '<p>暂无相册。</p>';
+}
+content.onclick = e => {
+  const button = e.target.closest('[data-photo]');
+  if(!button) return;
+  activeAlbum = albums.find(a => a.id === button.dataset.album);
+  photos = orderedPhotos(activeAlbum);
+  current = Number(button.dataset.photo);
+  showPhoto();
+  viewer.showModal();
+};
+function showPhoto() {
+  const p = photos[current];
+  get('large').src = p.file + '.jpg';
+  get('large').alt = get('photoTitle').textContent = p.title;
+  get('counter').textContent = (current + 1) + ' / ' + photos.length;
+  get('info').textContent = [p.captured || [activeAlbum.date,p.time].filter(Boolean).join(' '),p.camera ?? (p.imported ? '' : 'Sony α7 IV'),p.lens ?? (p.imported ? '' : 'FE 24–70 mm'),p.settings,p.imported ? '' : '示例'].filter(Boolean).join(' · ');
+  get('previous').disabled = get('next').disabled = photos.length < 2;
+}
+function move(step) {
+  current = (current + step + photos.length) % photos.length;
+  showPhoto();
+}
+get('close').onclick = () => viewer.close();
+get('previous').onclick = () => move(-1);
+get('next').onclick = () => move(1);
+viewer.onkeydown = e => {
+  if(e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); move(e.key === 'ArrowRight' ? 1 : -1); }
+};
 let touchX;
-get('large').ontouchstart=e=>{touchX=e.changedTouches[0].clientX};
-get('large').ontouchend=e=>{const dx=e.changedTouches[0].clientX-touchX;if(Math.abs(dx)>50)move(dx<0?1:-1)};
-function render(){
- if(viewer.open)viewer.close();
- const gear=location.hash==='#gear';
- document.querySelectorAll('nav a').forEach(a=>a.setAttribute('aria-current',(gear?a.hash==='#gear':a.hash==='#albums')?'page':'false'));
- const album=albums.find(a=>location.hash==='#album-'+a.id);
- if(album)drawAlbum(album);
- else if(gear)content.innerHTML='<h1>我的装备</h1><div class="grid gear">'+journal.gear.map(x=>'<figure><img src="'+esc(x.photo)+'.jpg" alt="'+esc(x.name)+'"><h3>'+esc(x.name)+'</h3><p>'+esc(x.note)+'</p></figure>').join('')+'</div>';
- else drawWall();
-}
-addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});render();
-</script></html>
+get('large').ontouchstart = e => { touchX = e.changedTouches[0].clientX; };
+get('large').ontouchend = e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if(Math.abs(dx) > 50) move(dx < 0 ? 1 : -1);
+};
+addEventListener('hashchange', () => { render(); window.scrollTo(0,0); });
+render();
+</script>
+</body>
+</html>

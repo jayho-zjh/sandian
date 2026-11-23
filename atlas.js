@@ -1,11 +1,16 @@
 /* A small Web Mercator map with ordinary XYZ raster tiles. */
-function atlas(host,{center=[29.78,121.64],zoom=13,markers=[],points=[],localMap=false,onPick=null,onMarker=null}={}){
+function atlas(host,{center=[29.78,121.64],zoom=13,markers=[],points=[],localMap=false,cartoLight=false,createMarker=null,onPick=null,onMarker=null}={}){
  const layer=document.createElement('div'),credit=document.createElement('a'),tools=document.createElement('div');
- Object.assign(host.style,{position:'relative',overflow:'hidden',background:'#263237',touchAction:'none'});
+ Object.assign(host.style,{position:'relative',overflow:'hidden',background:cartoLight?'var(--paper)':'#263237',touchAction:'none'});
  host.replaceChildren(layer,tools,credit);
  Object.assign(layer.style,{position:'absolute',inset:0,overflow:'hidden'});
  Object.assign(credit.style,{position:'absolute',bottom:'0',right:'0',background:'#fff',color:'#222',font:'11px Arial',padding:'2px'});
  credit.href='https://www.openstreetmap.org/copyright';credit.textContent='© OpenStreetMap';credit.target='_blank';credit.rel='noopener';
+  if(cartoLight){
+ const carto=document.createElement('a');carto.href='https://carto.com/attributions';carto.textContent='© CARTO';carto.target='_blank';carto.rel='noopener';
+ const attribution=document.createElement('span');attribution.style.cssText=credit.style.cssText;
+ credit.style.cssText='';attribution.append(credit,' · ',carto);host.append(attribution);
+ }
  Object.assign(tools.style,{position:'absolute',left:'8px',top:'8px',display:'flex',gap:'4px'});
  function world([lat,lon]){
  const s=Math.sin(Math.max(-85,Math.min(85,lat))*Math.PI/180);
@@ -29,8 +34,8 @@ function atlas(host,{center=[29.78,121.64],zoom=13,markers=[],points=[],localMap
  }
  }else for(let x=Math.floor(x0/256);x<=Math.floor((x0+w)/256);x++){
  for(let y=Math.max(0,Math.floor(y0/256));y<=Math.min(2**z-1,Math.floor((y0+h)/256));y++){
- const img=new Image();img.alt='';img.draggable=false;img.src='https://tile.openstreetmap.org/'+z+'/'+((x%2**z+2**z)%2**z)+'/'+y+'.png';
- Object.assign(img.style,{position:'absolute',width:'256px',height:'256px',left:x*256-x0+'px',top:y*256-y0+'px',pointerEvents:'none',opacity:'.82'});fragment.append(img);
+ const img=new Image();img.alt='';img.draggable=false;img.src=(cartoLight?'https://basemaps.cartocdn.com/light_nolabels/':'https://tile.openstreetmap.org/')+z+'/'+((x%2**z+2**z)%2**z)+'/'+y+'.png';
+ Object.assign(img.style,{position:'absolute',width:'256px',height:'256px',left:x*256-x0+'px',top:y*256-y0+'px',pointerEvents:'none',opacity:cartoLight?'1':'.82',filter:cartoLight?'saturate(.6) brightness(1.02)':'none'});fragment.append(img);
  }}
  const pixel=p=>{const [x,y]=world(p);return [x*size-x0,y*size-y0]};
  if(points.length){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 '+w+' '+h);Object.assign(svg.style,{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'});
@@ -47,7 +52,12 @@ function atlas(host,{center=[29.78,121.64],zoom=13,markers=[],points=[],localMap
  occupied.push([px,py,half]);names.add(name);
  }
  }
- for(const m of markers){const [x,y]=pixel(m.point);const b=document.createElement('button');b.type='button';b.textContent='● '+m.name;Object.assign(b.style,{position:'absolute',top:y+'px',left:x+'px',transform:'translate(-50%,-50%)',whiteSpace:'nowrap',borderRadius:'16px',border:'1px solid #705a33',background:'#f6d596',color:'#221e16'});b.onclick=()=>onMarker?.(m);fragment.append(b)}
+  for(const m of markers){
+ const [x,y]=pixel(m.point);
+ if(createMarker){
+ const marker=createMarker(m);marker.style.left=x+'px';marker.style.top=y+'px';marker.onclick=()=>onMarker?.(m);fragment.append(marker);continue;
+ }
+ const b=document.createElement('button');b.type='button';b.textContent='● '+m.name;Object.assign(b.style,{position:'absolute',top:y+'px',left:x+'px',transform:'translate(-50%,-50%)',whiteSpace:'nowrap',borderRadius:'16px',border:'1px solid #705a33',background:'#f6d596',color:'#221e16'});b.onclick=()=>onMarker?.(m);fragment.append(b)}
  layer.replaceChildren(fragment);
  }
  host.onpointerdown=e=>{if(e.target.closest('button,a'))return;drag=[e.clientX,e.clientY,cx,cy];host.setPointerCapture(e.pointerId)};
@@ -59,6 +69,12 @@ function atlas(host,{center=[29.78,121.64],zoom=13,markers=[],points=[],localMap
 }
 /* Draw cached regional cartography at exactly the route's Web Mercator scale. */
 function localMapLayers(width,height,scale,left,top){
+ const region=window.previewRegion;
+ if(region && !window.runTiles){
+  const side=scale/2**region.zoom;
+  const visible=region.tiles.some(([x,y])=>x*side+side>left*scale && x*side<left*scale+width && y*side+side>top*scale && y*side<top*scale+height);
+  return visible?[{src:"route-region.webp",side:region.span*side,x:region.x*side-left*scale,y:region.y*side-top*scale}]:[];
+ }
  const result=[];
  for(const [key,bytes] of Object.entries(window.runTiles||{})){
   const [z,x,y]=key.split('/').map(Number);

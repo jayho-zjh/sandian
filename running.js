@@ -69,8 +69,10 @@ function projectedPath(points){
 function replay(){
  if(smallAmap){smallAmap.replay();return}
  const route=getRunEl('route');route.getAnimations().forEach(a=>a.cancel());
+ getRunEl('routeFlow').classList.remove('active');
  if(!route.getAttribute('d')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- const length=route.getTotalLength();route.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length},{strokeDasharray:length+' '+length,strokeDashoffset:0}],{duration:6000,easing:'ease-in-out'});
+ const flow=getRunEl('routeFlow');flow.classList.remove('active');flow.setAttribute('d',route.getAttribute('d'));
+ const length=route.getTotalLength();const drawing=route.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length},{strokeDasharray:length+' '+length,strokeDashoffset:0}],{duration:6000,easing:'ease-in-out'});drawing.onfinish=()=>flow.classList.add('active');
 }
 function renderRuns(){
  const month=monthSelect.value;
@@ -79,7 +81,7 @@ function renderRuns(){
  selected=run?.id||'';
  getRunEl('headline').textContent='本月跑了 '+new Set(inMonth.map(r=>r.date.slice(0,10))).size+' 天';
  const stats=[[inMonth.reduce((s,r)=>s+(r.km??0),0).toFixed(1)+' km','本月里程'],[inMonth.length+' 次','跑步次数'],[data?(data.ability??'—'):'45.2','当前跑力指数'],[data?clockTime(data.predictions?.km5):'24:30','5 km 预测']];
- getRunEl('metrics').innerHTML=stats.map(([v,k])=>'<div><b>'+esc(v)+'</b><small>'+k+'</small></div>').join('');
+ getRunEl('metrics').innerHTML=stats.map(([v,k])=>'<div><b>'+esc(v).replace(/ (km|次)$/,'<span>$1</span>')+'</b><small>'+k+'</small></div>').join('');
  const buttons=getRunEl('dates');buttons.replaceChildren();
  for(const r of inMonth){
  const b=document.createElement('button');b.textContent=r.date.slice(5,10).replace('-','.')+(inMonth.some(other=>other!==r&&other.date.slice(0,10)===r.date.slice(0,10))?' '+r.date.slice(11,16):'');b.setAttribute('aria-pressed',r===run);b.onclick=()=>{selected=r.id;renderRuns();buttons.querySelector('[aria-pressed=true]').focus()};buttons.append(b);
@@ -92,7 +94,7 @@ function renderRuns(){
  const backdrop=osmPoints.length?osmPoints:forOsm(usableTrack(runs.filter(r=>r.points?.length>1&&r.date<=(run?.date||'')).at(-1)?.points));
  const line=projectedPath(backdrop);
  const path=run?.path||(osmPoints.length?line:'');
- const route=getRunEl('route');route.setAttribute('d',path);
+ const route=getRunEl('route');route.setAttribute('d',path);getRunEl('routeLabel').textContent=run?.km!=null?'本次距离 '+run.km.toFixed(2)+' km':'';
  for(const [id,dist] of [['start',0],['end',path?route.getTotalLength():0]]){
  const dot=getRunEl(id);dot.style.display=path?'':'none';if(path){const p=route.getPointAtLength(dist);dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y)}
  }
@@ -121,7 +123,7 @@ monthSelect.onchange=()=>{selected='';renderRuns()};getRunEl('replay').onclick=r
 
 setInterval(()=>{
  const script=document.createElement('script');
- script.src='running-data.js?refresh='+Date.now();
+ script.src='run-preview.js?refresh='+Date.now();
  script.onload=()=>{
  script.remove();
  const next=window.runningArchive;if(!next||data?.synced===next.synced)return;

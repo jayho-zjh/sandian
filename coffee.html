@@ -1,18 +1,72 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>咖啡 · 散点</title><link rel="stylesheet" href="numbers.css"><link rel="stylesheet" href="journal.css">
-<body class="shell"><header class="brand"><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><a href="index.html">返回首页</a></header><main><h1>咖啡手记</h1><nav class="tabs" id="tabs"></nav><section id="cards"></section></main><footer>Jayho 的咖啡图鉴 · 初始内容为示例</footer>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>咖啡手记 · 散点</title>
+<link rel="stylesheet" href="numbers.css"><link rel="stylesheet" href="journal.css">
+<style>
+body[data-module="coffee"] {background:var(--coffee-paper,#f5f1ea)}
+.catalogue {padding-top:32px}
+.inventory,.specimen-index {font-family:var(--font-num-mono);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.inventory {font-size:13px;margin:0;color:var(--ink-soft)}
+.specimens {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.specimen {display:block;color:inherit;text-decoration:none;overflow:hidden;border:1px solid var(--line);border-radius:6px;transition:transform .3s cubic-bezier(.22,.61,.36,1),box-shadow .3s}
+.specimen-image {display:block;overflow:hidden;aspect-ratio:4/5}
+.specimen-image img,.specimen-detail img {display:block;width:100%;height:100%;object-fit:cover}
+.specimen img {transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+.specimen:hover,.specimen:focus-visible {transform:translateY(-4px);box-shadow:0 8px 24px rgba(39,43,38,.08)}
+.specimen:hover img {transform:scale(1.02)}
+.specimen-text {display:block;padding:16px 18px 20px}
+.specimen-index {font-size:11px;color:var(--ink-soft)}
+.specimen h3 {margin:4px 0 10px;font-size:20px}
+.tags,.related {display:flex;align-items:baseline;flex-wrap:wrap;gap:8px}
+.tasting-note {font-style:italic;color:var(--ink-soft);margin:14px 0 0;padding-left:10px;border-left:1px solid var(--ink-soft)}
+.specimen-detail {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:clamp(24px,5vw,96px);margin:24px 0}
+.specimen-detail img {aspect-ratio:4/5;border-radius:6px;max-height:65vh}
+.specimen-detail h2 {margin:8px 0 14px}.related {font-size:13px;margin:18px 0 0}
+@media(max-width:720px){.specimens{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.specimen-text{padding:12px}.specimen-detail{grid-template-columns:1fr}}
+@media(max-width:440px){.specimens{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.specimen,.specimen img{transition:none}.specimen:hover,.specimen:focus-visible,.specimen:hover img{transform:none}}
+</style>
+</head>
+<body data-module="coffee">
+<header class="module-header"><div class="shell">
+<div class="brand"><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i>
+<nav class="site-nav" aria-label="栏目"><a href="running.html">跑步</a><a href="fishing.html">钓鱼</a><a href="coffee.html" aria-current="page">咖啡</a><a href="photography.html">摄影</a></nav></div>
+<div class="module-intro"><h1>咖啡手记</h1><p><i>一小杯收住整个早晨的香气。</i></p></div>
+</div></header>
+<main class="shell catalogue"><p class="inventory" id="inventory"></p>
+<nav class="tabs" id="tabs" aria-label="咖啡分类"></nav><section id="cards" aria-label="馆藏"></section>
+<footer>Jayho 的咖啡图鉴 · 初始内容为示例</footer></main>
 <script src="journal-data.js"></script><script src="site.js"></script><script>
-const titles={drinks:'咖啡图鉴',beans:'咖啡豆',tools:'器具'};
-function draw(){
- const [section,id]=location.hash.slice(1).split('/');
- const key=Object.hasOwn(titles,section)?section:'drinks';
- const items=[...journal[key]];
- if(key==='drinks')items.sort((a,b)=>b.date.localeCompare(a.date));
- const item=items.find(x=>x.id===id);
- tabs.innerHTML=Object.entries(titles).map(([k,title])=>'<a href="#'+k+'" aria-current="'+(key===k?'page':'false')+'">'+title+' · '+journal[k].length+'</a>').join('');
- function references(group){return (item[group]||[]).map(ref=>journal[group].find(x=>x.id===ref)).filter(Boolean).map(x=>'<a href="#'+group+'/'+esc(x.id)+'">'+esc(x.name)+'</a>').join('')}
- if(item){
- cards.innerHTML='<a href="#'+key+'">← '+titles[key]+'</a><article class="detail"><img src="'+esc(item.photo)+'.jpg" alt="'+esc(item.name)+'"><div><h2>'+esc(item.name)+'</h2><p>'+esc(item.note)+'</p>'+(key==='drinks'?'<p class="links">咖啡豆　'+references('beans')+'</p><p class="links">器具　'+references('tools')+'</p>':'')+'</div></article>';
- }else cards.innerHTML='<div class="tiles">'+items.map(x=>'<a class="tile" href="#'+key+'/'+esc(x.id)+'"><img src="'+esc(x.photo)+'.jpg" alt="'+esc(x.name)+'"><h2>'+esc(x.name)+'</h2><p>'+esc(x.note)+'</p></a>').join('')+'</div>';
+const titles = {drinks:'咖啡图鉴', beans:'咖啡豆', tools:'器具'};
+const pad = n => String(n).padStart(3,'0');
+const total = journal.drinks.length;
+document.getElementById('inventory').textContent = '咖啡图鉴 '+(total?'NO.001–'+pad(total):'0 款')+' ／ 豆 '+journal.beans.length+' 种 ／ 器具 '+journal.tools.length+' 件';
+function draw() {
+  const [section,id] = location.hash.slice(1).split('/');
+  const key = Object.hasOwn(titles,section) ? section : 'drinks';
+  const items = [...journal[key]];
+  if(key==='drinks') items.sort((a,b)=>b.date.localeCompare(a.date));
+  const item = items.find(x=>encodeURIComponent(x.id)===id);
+  const url = (group,x) => '#'+group+'/'+encodeURIComponent(x.id);
+  const picture = x => '<img loading="lazy" decoding="async" src="'+esc(x.photo)+'.jpg" alt="'+esc(x.name)+'">';
+  const note = x => x.note ? '<p class="tasting-note">'+esc(x.note)+'</p>' : '';
+  const tags = x => (x.tags||[]).map(tag=>'<span class="chip">'+esc(tag)+'</span>').join('');
+  const number = x => '<span class="specimen-index">NO.'+pad(journal[key].indexOf(x)+1)+'</span>';
+  document.getElementById('tabs').innerHTML = Object.entries(titles).map(([k,title])=>
+    '<a href="#'+k+'" aria-current="'+(key===k?'page':'false')+'">'+title+' · '+journal[k].length+'</a>').join('');
+  const cards = document.getElementById('cards');
+  if(item) {
+    const references = group => {
+      const refs = (item[group]||[]).map(id=>journal[group].find(x=>x.id===id)).filter(Boolean);
+      return refs.length ? '<p class="related">'+titles[group]+' '+refs.map(x=>'<a href="'+esc(url(group,x))+'">'+esc(x.name)+'</a>').join('')+'</p>' : '';
+    };
+    cards.innerHTML = '<a href="#'+key+'">← '+titles[key]+'</a><article class="specimen-detail">'+picture(item)+'<div>'+number(item)+'<h2>'+esc(item.name)+'</h2><div class="tags">'+tags(item)+'</div>'+note(item)+references('beans')+references('tools')+'</div></article>';
+    return;
+  }
+  cards.innerHTML = '<div class="specimens">'+items.map(x=>
+    '<a class="specimen" href="'+esc(url(key,x))+'"><div class="specimen-image">'+picture(x)+'</div><div class="specimen-text">'+number(x)+'<h3>'+esc(x.name)+'</h3><div class="tags">'+tags(x)+'</div>'+note(x)+'</div></a>').join('')+'</div>';
 }
 addEventListener('hashchange',draw);draw();
-</script></html>
+</script></body></html>

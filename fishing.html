@@ -1,35 +1,124 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>钓位地图 · 散点</title><link rel="stylesheet" href="numbers.css">
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>钓位地图 · 散点</title>
+<link rel="stylesheet" href="numbers.css"><link rel="stylesheet" href="journal.css">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:#242824;font-family:JournalDigits,Georgia,"Songti SC",SimSun,serif}main,header{width:min(90%,1320px);margin:auto}header{padding:23px 0;border-bottom:1px solid #c9cdc5;display:flex;align-items:baseline;gap:18px}header strong{font-size:34px}a{color:inherit;text-decoration:none}header a:last-child{margin-left:auto}h1{font-size:clamp(34px,5vw,66px);margin:34px 0 10px}p{line-height:1.65}.map{background:#17282a;color:#eaf0e6;border-radius:5px;overflow:hidden;position:relative}.map svg{display:block;width:100%;height:auto}.pin{background:#283b39;color:#fff;border:1px solid #98a69a;border-radius:20px;position:absolute;transform:translate(-50%,-50%);font:inherit;padding:6px 10px;white-space:nowrap;cursor:pointer}.pin:before{content:'●';color:#b2c6ba;margin-right:5px}.pin[aria-pressed=true]{background:#edb967;color:#172524;border-color:#edb967}.pin[aria-pressed=true]:before{color:#263631}.pin:focus-visible{outline:3px solid white;outline-offset:2px}small,.hint,time{color:#636d62}.hint{margin:0 0 17px}.records{margin:26px 0 55px}.records h2{font-size:32px;margin-bottom:4px}.entry{border-top:1px solid #cbd0c7;padding:18px 0;display:flex;gap:24px;align-items:center}.entry img{width:min(32%,260px);aspect-ratio:1.7;object-fit:cover;border-radius:4px}.entry h3{margin:6px 0}.entry p{margin:0}.map text{fill:#8da9a6;font:14px JournalDigits,Georgia,serif;letter-spacing:5px}@media(max-width:650px){.map svg{height:255px}.pin{font-size:13px}.entry{gap:12px}.entry img{width:35%}header{gap:9px}.entry p{font-size:14px}}
-.catch-photos{width:min(32%,260px);display:flex;gap:8px;overflow:auto}.entry .catch-photos a{flex:0 0 100%}.entry .catch-photos img{width:100%}</style>
-<header><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i><a href="index.html">返回首页</a></header>
-<main><h1>钓位地图</h1><p class="hint">点选岸边的钓位，翻看历次出钓。初始钓位为示例，实地记录显示经纬度。</p>
-<div class="map" id="map"><svg viewBox="0 0 1000 325" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="contour" width="210" height="130" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)"><g fill="none" stroke="#344440" stroke-width="1"><path d="M-10 20Q50 -5 110 20T230 20M-10 32Q50 6 110 32T230 32M-10 49Q50 21 110 49T230 49M-10 73Q50 49 110 73T230 73M-10 96Q50 69 110 96T230 96"/></g></pattern></defs><rect width="1000" height="325" fill="#23332f"/><rect width="1000" height="325" fill="url(#contour)"/><path d="M86 143 Q133 99 237 110 T411 69 Q500 29 597 69 T745 100 Q828 104 830 141 T895 183 Q928 217 806 211 T646 251 Q555 299 434 250 T259 220 Q152 246 103 209 T86 143Z" fill="#193137" stroke="#65827d" stroke-width="2"/><text x="460" y="166">水 库</text></svg></div>
-<section class="records" aria-live="polite"><h2 id="spot"></h2><p id="summary"></p><div id="visits"></div></section></main>
+.fishing-book {padding-top:24px;padding-bottom:48px}
+.map-tabs,.spot-list,.species {display:flex;flex-wrap:wrap;gap:8px}
+.map-tabs {border-bottom:1px solid var(--line);margin-bottom:14px;gap:24px}
+.map-tabs button {border:0;border-bottom:2px solid transparent;padding:8px 0;background:none;color:inherit}
+.map-tabs button[aria-pressed=true] {border-color:var(--gold)}
+.field-map {position:relative;isolation:isolate;overflow:hidden;height:clamp(210px,34vh,350px);border:1px solid var(--line);border-radius:6px}
+.field-map[hidden] {display:none}
+#geographic {background-image:linear-gradient(90deg,var(--line) 1px,transparent 1px),linear-gradient(var(--line) 1px,transparent 1px);background-size:32px 32px}
+.map-pin {position:absolute;transform:translate(-50%,-50%);border:1px solid var(--ink);border-radius:18px;background:var(--paper);color:var(--ink);padding:4px 9px;display:flex;gap:4px;align-items:center;white-space:nowrap;font-size:13px}
+.map-pin svg {height:20px;width:20px}
+.map-pin[aria-pressed=true] {border-color:var(--gold);z-index:1}
+.map-pin[aria-pressed=true]::after {content:'';position:absolute;inset:-2px;border:1px solid var(--gold);border-radius:inherit;pointer-events:none;animation:ring 1.8s ease-in-out infinite}
+@keyframes ring {50%{transform:scale(1.15);opacity:.3}}
+#sketch {background:#ecece5}
+#sketch>.contour {width:100%;height:100%;display:block}
+.spot-list {margin:14px 0 0}.spot-list button {background:transparent;color:var(--ink);cursor:pointer}
+.spot-list [aria-pressed=true] {border-color:var(--gold)}
+.records {margin-top:40px}
+.records h2 {margin:0}
+.coordinate,.visit time {color:var(--ink-soft);font:13px var(--font-num);font-variant-numeric:tabular-nums}
+.coordinate {font:11px var(--font-num-mono);display:inline-flex;align-items:center;gap:4px}
+.coordinate svg {width:13px;height:13px}
+.spot-summary {font-size:13px;color:var(--ink-soft);margin:6px 0 20px}
+.visit {display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);column-gap:24px;align-items:start;border-top:1px solid var(--line);padding:24px 0}
+.visit-main {grid-column:1;grid-row:1 / span 4;display:block}
+.visit-main img,.thumbs img {width:100%;display:block;object-fit:cover;border-radius:6px}
+.visit-main img {aspect-ratio:4/3}
+.visit header,.visit .thumbs,.visit .field-notes {grid-column:2}
+.visit header h2 {margin:4px 0 8px}.visit header p{margin:0 0 12px}
+.species:empty,.thumbs:empty {display:none}
+.thumbs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}.thumbs img {aspect-ratio:4/3}
+.field-notes {font-size:13px;margin:14px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.field-notes summary {padding:8px 12px;cursor:pointer}.field-notes dl {margin:0}
+.field-notes dl div {display:flex;gap:14px;justify-content:space-between;padding:6px 12px;border-top:1px solid var(--line)}
+.field-notes dt {color:var(--ink-soft)}.field-notes dd {margin:0}
+.tile-status {position:absolute;bottom:8px;left:8px;padding:4px 8px;border-radius:6px;background:var(--paper);color:var(--ink-soft);font-size:11px;pointer-events:none}
+@media(max-width:720px){.visit {grid-template-columns:1fr;gap:14px}.visit header,.visit .visit-main,.visit .thumbs,.visit .field-notes {grid-column:1;grid-row:auto}.visit header{order:-1}.visit .thumbs,.visit .field-notes{margin:0}.map-pin{font-size:11px;padding:3px 5px}.map-pin svg{width:16px}.records{margin-top:24px}}
+@media(prefers-reduced-motion:reduce){.map-pin[aria-pressed=true]::after{animation:none}}
+</style>
+</head>
+<body data-module="fishing">
+<header class="module-header"><div class="shell">
+<div class="brand"><a href="index.html"><strong>散点</strong></a><i>Curated by &nbsp;Jayho</i>
+<nav class="site-nav" aria-label="栏目"><a href="running.html">跑步</a><a href="fishing.html" aria-current="page">钓鱼</a><a href="coffee.html">咖啡</a><a href="photography.html">摄影</a></nav></div>
+<div class="module-intro"><h1>钓位地图</h1><p><i>沿着岸线，翻回每一次出钓。</i></p></div>
+</div></header>
+<main class="shell fishing-book">
+<nav class="map-tabs" id="mapTabs" aria-label="地图类型"></nav>
+<div class="field-map" id="geographic" role="region" aria-label="实地钓位地图" hidden></div>
+<div class="field-map" id="sketch" role="region" aria-label="示意钓位地图" hidden>
+<svg class="contour" viewBox="0 0 1000 325" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="contour" width="210" height="95" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)"><g fill="none" stroke="#d1d3c8"><path d="M-10 20Q50 -5 110 20T230 20M-10 32Q50 6 110 32T230 32M-10 49Q50 21 110 49T230 49M-10 73Q50 49 110 73T230 73"/></g></pattern></defs><rect width="1000" height="325" fill="url(#contour)"/><path d="M86 143Q133 99 237 110T411 69Q500 29 597 69T745 100Q828 104 830 141T895 183Q928 217 806 211T646 251Q555 299 434 250T259 220Q152 246 103 209T86 143Z" fill="#d0d7d3" stroke="#a6b2ab"/><text x="460" y="166" fill="#575f59">水 库</text></svg></div>
+<div id="spotList" class="spot-list" role="group" aria-label="选择钓位"></div>
+<section class="records" aria-live="polite"><h2 id="spot"></h2><p class="spot-summary" id="summary"></p><div id="visits"></div></section>
+</main>
 <script src="site.js"></script><script src="journal-data.js"></script><script src="atlas.js"></script><script>
-const spots=journal.spots;
-const map=document.getElementById('map');
-let geographicMap;
-function selectSpot(spot){
- if(spot.point)geographicMap?.focus(spot.point);
- for(const pin of map.querySelectorAll('.pin')) pin.setAttribute('aria-pressed',String(pin.textContent===spot.name));
- document.getElementById('spot').textContent=spot.name;
- document.getElementById('summary').textContent=spot.visits.length+' 次出钓'+(spot.point?' · '+spot.point.join(', '):' · 示意钓位');
- const entries=[...spot.visits].sort((a,b)=>b.date.localeCompare(a.date));
- document.getElementById('visits').innerHTML=entries.map(v=>'<article class="entry"><div class="catch-photos">'+(v.photos||[v.photo]).map(f=>'<a href="'+esc(f)+'.jpg"><img src="'+esc(f)+'.jpg" alt="'+esc(v.alt||v.title)+'"></a>').join('')+'</div><div><time datetime="'+esc(v.date)+'">'+esc(v.date)+'</time><h3>'+esc(v.title)+'</h3><p>'+esc(v.note)+'</p></div></article>').join('');
+const spots = journal.spots;
+const maps = { geographic:spots.filter(s=>s.point), sketch:spots.filter(s=>!s.point) };
+const mobile = matchMedia('(max-width:720px)');
+const el = id=>document.getElementById(id);
+const svg = path=>'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+const floatIcon = svg('<path d="M14 2 12 7m-3 9-3 6"/><ellipse cx="11" cy="12" rx="3" ry="6" transform="rotate(19 11 12)"/>');
+const hookIcon = svg('<circle cx="16" cy="4" r="2"/><path d="M16 6v9a5 5 0 1 1-10 0v-3l3 3"/>');
+const locationIcon = svg('<path d="M19 10c0 5-7 11-7 11s-7-6-7-11a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>');
+let selected, geographicMap;
+function marker(s) {
+  const pin=document.createElement('button');
+  pin.type='button';pin.className='map-pin';pin.innerHTML=(s.point?hookIcon:floatIcon)+esc(s.name);
+  pin.setAttribute('aria-pressed',String(selected===s));pin.dataset.spot=s.name;
+  return pin;
 }
-for(const spot of spots.filter(s=>!s.point)){
- const pin=document.createElement('button');pin.className='pin';pin.textContent=spot.name;
- pin.style.left=spot.x+'%';pin.style.top=spot.y+'%';pin.onclick=()=>selectSpot(spot);map.append(pin);
+function dms(value,plus,minus) {
+  const seconds=Math.round(Math.abs(value)*3600);
+  const two=n=>String(n).padStart(2,'0');
+  return Math.floor(seconds/3600)+'°'+two(Math.floor(seconds%3600/60))+'′'+two(seconds%60)+'″'+(value<0?minus:plus);
 }
-const actual=spots.filter(s=>s.point);
-if(actual.length){
- const section=document.createElement('div');section.style.height='350px';section.setAttribute('aria-label','实地钓位地图');map.before(section);
- geographicMap=atlas(section,{center:actual[0].point,markers:actual.map(s=>({name:s.name,point:s.point})),onMarker:m=>selectSpot(actual.find(s=>s.name===m.name))});
- const list=document.createElement('div');section.after(list);for(const spot of actual){const b=document.createElement('button');b.textContent=spot.name;b.onclick=()=>{selectSpot(spot);section.scrollIntoView({block:'center'})};list.append(b)}
+function entry(v) {
+  const files=(v.photos?.length?v.photos:[v.photo]).filter(Boolean);
+  const photo=(file,i)=>'<a href="'+esc(file)+'.jpg"><img loading="lazy" decoding="async" src="'+esc(file)+'.jpg" alt="'+esc(v.alt||v.title)+(files.length>1?' · 照片 '+(i+1):'')+'"></a>';
+  const species=v.species||[];
+  const notes=[['水温',v.waterTemperature],['天气',v.weather],['鱼情',v.catch||species.join('、')],['钓法',v.method]];
+  return '<article class="visit"><div class="visit-main">'+(files.length?photo(files[0],0):'')+'</div><header><time datetime="'+esc(v.date)+'">'+esc(v.date)+'</time><h2>'+esc(v.title)+'</h2><p>'+esc(v.note)+'</p><div class="species">'+species.map(s=>'<span class="chip">'+esc(s)+'</span>').join('')+'</div></header><div class="thumbs">'+files.slice(1).map((file,i)=>photo(file,i+1)).join('')+'</div><details class="field-notes" '+(mobile.matches?'':'open')+'><summary>出钓手账</summary><dl>'+notes.map(([k,value])=>'<div><dt>'+k+'</dt><dd>'+esc(value||'未记录')+'</dd></div>').join('')+'</dl></details></article>';
 }
-const initial=spots.find(s=>encodeURIComponent(s.name)===location.hash.slice(1))||actual[0]||spots[0];
+function selectSpot(s) {
+  selected=s;
+  const kind=s.point?'geographic':'sketch';
+  for(const id of Object.keys(maps)) el(id).hidden=id!==kind;
+  for(const b of el('mapTabs').children) b.setAttribute('aria-pressed',String(b.dataset.kind===kind));
+  if(s.point) {
+    if(!geographicMap){
+      geographicMap=atlas(el('geographic'),{center:s.point,markers:maps.geographic,cartoLight:true,createMarker:marker,onMarker:selectSpot});
+      const status=document.createElement('small');status.className='tile-status';status.hidden=true;status.textContent='底图暂时无法载入';el('geographic').append(status);
+      const update=()=>{const tiles=[...el('geographic').querySelectorAll('img')];status.hidden=!tiles.length||!tiles.every(t=>t.complete&&!t.naturalWidth)};
+      el('geographic').addEventListener('error',update,true);el('geographic').addEventListener('load',update,true);
+    } else geographicMap.focus(s.point);
+  }
+  for(const pin of el('sketch').querySelectorAll('.map-pin')) pin.setAttribute('aria-pressed',String(pin.dataset.spot===s.name));
+  el('spotList').replaceChildren(...maps[kind].map(spot=>{
+    const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=spot.name;
+    b.setAttribute('aria-pressed',String(spot===s));b.onclick=()=>selectSpot(spot);return b;
+  }));
+  el('spot').textContent=s.name;
+  const coordinate=s.point?'<span class="coordinate">'+locationIcon+dms(s.point[0],'N','S')+' '+dms(s.point[1],'E','W')+'</span>':'示意钓位';
+  el('summary').innerHTML=s.visits.length+' 次出钓 · '+coordinate;
+  el('visits').innerHTML=[...s.visits].sort((a,b)=>b.date.localeCompare(a.date)).map(entry).join('')||'<p>尚无出钓记录。</p>';
+}
+for(const [kind,group] of Object.entries(maps)){
+  if(!group.length)continue;
+  const b=document.createElement('button');b.type='button';b.textContent=kind==='geographic'?'实地钓位':'示意钓位';b.dataset.kind=kind;
+  b.onclick=()=>{if(!group.includes(selected))selectSpot(group[0])};el('mapTabs').append(b);
+}
+for(const s of maps.sketch){
+  const pin=marker(s);pin.style.left=s.x+'%';pin.style.top=s.y+'%';pin.onclick=()=>selectSpot(s);el('sketch').append(pin);
+}
+mobile.addEventListener('change',()=>{for(const notes of document.querySelectorAll('.field-notes'))notes.open=!mobile.matches});
+const initial=spots.find(s=>encodeURIComponent(s.name)===location.hash.slice(1))||maps.geographic[0]||spots[0];
 if(initial)selectSpot(initial);
-</script></html>
+</script></body></html>

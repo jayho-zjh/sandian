@@ -59,12 +59,14 @@ window.journal = {
   "beans": [
     {
       "id": "ethiopia",
+      "tags": ["埃塞俄比亚", "水洗", "浅烘焙"],
       "name": "埃塞俄比亚 · 水洗",
       "note": "浅烘焙，柑橘和清茶的香气。",
       "photo": "light-beans"
     },
     {
       "id": "blend",
+      "tags": ["巴西拼配", "中深烘"],
       "name": "巴西拼配 · 中深烘",
       "note": "坚果、可可，适合浓缩和奶咖。",
       "photo": "dark-beans"
@@ -77,6 +79,7 @@ window.journal = {
       ],
       "date": "2026-11-13",
       "id": "latte",
+      "tags": ["细奶泡", "坚果香"],
       "name": "燕麦拿铁",
       "note": "细奶泡和坚果香。",
       "photo": "coffee",
@@ -90,6 +93,7 @@ window.journal = {
       ],
       "date": "2026-11-08",
       "id": "pour",
+      "tags": ["花香"],
       "name": "手冲咖啡",
       "note": "水温略降，杯里的花香更清楚。",
       "photo": "pour",
@@ -103,6 +107,7 @@ window.journal = {
       ],
       "date": "2026-10-25",
       "id": "espresso",
+      "tags": ["豆调 · 坚果", "豆调 · 可可"],
       "name": "意式浓缩",
       "note": "一小杯收住整个早晨的香气。",
       "photo": "espresso",
@@ -169,6 +174,8 @@ window.journal = {
       "visits": [
         {
           "title": "斗湖游记",
+          "species": ["鲫鱼", "翘嘴"],
+          "method": "7.2 米台钓杆",
           "date": "2025-07-01",
           "note": "7.2米台钓杆，喜获高山冷水鱼—鲫鱼、翘嘴",
           "photo": "media/651c331d0bce4ebeb3a35c5f89e16c73",
@@ -189,6 +196,8 @@ window.journal = {
       "visits": [
         {
           "title": "水库独钓",
+          "species": ["草鱼"],
+          "catch": "草鱼一尾（3 kg）",
           "date": "2025-12-07",
           "note": "目前单重记录，肥硕草鱼一尾（3kg）",
           "photo": "media/78841a6139dc4dfb9d203f7a8c81dba6",
@@ -203,12 +212,14 @@ window.journal = {
   "tools": [
     {
       "id": "v60",
+      "tags": ["锥形滤杯", "手冲"],
       "name": "V60 手冲滤杯",
       "note": "锥形滤杯，便于调整水流和萃取时间。",
       "photo": "dripper"
     },
     {
       "id": "machine",
+      "tags": ["半自动", "蒸汽打奶"],
       "name": "家用半自动咖啡机",
       "note": "萃取浓缩，也用蒸汽打发燕麦奶。",
       "photo": "machine"
